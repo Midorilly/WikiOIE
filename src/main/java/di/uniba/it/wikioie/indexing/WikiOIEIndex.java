@@ -248,6 +248,7 @@ public class WikiOIEIndex {
                         data.setConll(null);
                         writer.append(gson.toJson(data, Passage.class));
                         writer.newLine();
+//                      writer.close();
                     } catch (Exception ex) {
                         LOG.log(Level.INFO, "Error to process line", ex);
                     }
