@@ -11,7 +11,6 @@ import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.ocr.TesseractOCRConfig;
 import org.apache.tika.parser.pdf.PDFParserConfig;
 import org.apache.tika.sax.BodyContentHandler;
 import org.xml.sax.SAXException;
@@ -20,7 +19,7 @@ public class PreprocessThread extends Thread {
 	
 	private final BlockingQueue<PreFile> in;
 	private boolean run = true;	
-	private String outputPath;	
+	private final String outputPath;
 	private int threadDocCount = 0;
 	private static final Logger LOG = Logger.getLogger(PreprocessThread.class.getName());
 	
@@ -48,7 +47,6 @@ public class PreprocessThread extends Thread {
 					else {
 						LOG.log(Level.WARNING, "Unable to correctly parse " + title);
 					}
-						
 				} else {
 					setRun(false);
 				}
@@ -58,21 +56,26 @@ public class PreprocessThread extends Thread {
 		}
 	}
 	
-	public String parse(File file) throws IOException, SAXException, TikaException {		
-		FileInputStream stream = new FileInputStream(file);	
+	public String parse(File file) throws IOException, SAXException, TikaException {
+		String filePath = file.getAbsolutePath();
+		FileInputStream stream = new FileInputStream(file);
 		AutoDetectParser autoParser = new AutoDetectParser();
 		Metadata metadata = new Metadata();
 		BodyContentHandler handler = new BodyContentHandler(Integer.MAX_VALUE);		
 		PDFParserConfig pdfConfig = new PDFParserConfig();
-		pdfConfig.setOcrStrategy(PDFParserConfig.OCR_STRATEGY.OCR_AND_TEXT_EXTRACTION);
+		//pdfConfig.setOcrStrategy(PDFParserConfig.OCR_STRATEGY.OCR_AND_TEXT_EXTRACTION);
 		pdfConfig.setExtractInlineImages(true);		
-		TesseractOCRConfig ocrConfig = new TesseractOCRConfig();		
+		//TesseractOCRConfig ocrConfig = new TesseractOCRConfig();
 		ParseContext context = new ParseContext();				
-		context.set(TesseractOCRConfig.class, ocrConfig);
+		//context.set(TesseractOCRConfig.class, ocrConfig);
 		context.set(PDFParserConfig.class, pdfConfig);	
 		context.set(AutoDetectParser.class, autoParser);
-		autoParser.parse(stream, handler, metadata, context);
-		
+		LOG.log(Level.INFO, "[NAME: " + Thread.currentThread().getName() + "]" + " Processing " + filePath);
+		try {
+			autoParser.parse(stream, handler, metadata, context);
+		} catch (TikaException | OutOfMemoryError e) {
+			LOG.log(Level.WARNING, "[FILE: " + filePath + "] " + "caused error: " + e.getMessage());
+		}
 		String text = handler.toString();
 		stream.close();
 		return text;

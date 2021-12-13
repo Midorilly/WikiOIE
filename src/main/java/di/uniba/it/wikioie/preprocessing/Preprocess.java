@@ -28,7 +28,7 @@ import org.xml.sax.SAXException;
 
 public class Preprocess {	
 	
-	private static BlockingQueue<PreFile> in = new ArrayBlockingQueue(1000);
+	private static BlockingQueue<PreFile> in = new ArrayBlockingQueue(10000);
 	private int id = 0;
 	private static int inputDocCount = 0;
 	private static int outputDocCount;
@@ -63,6 +63,8 @@ public class Preprocess {
 	}
 	
 	public static void main(String[] args) throws IOException, TikaException, SAXException {
+		System.setProperty("java.util.logging.SimpleFormatter.format",
+				"%4$s: %5$s [%1$tc]%n");
 		Options options = new Options();
 		options = options.addOption(new Option("i", true, "Input directory"))
 				.addOption(new Option("o", true, "Output directory"))
