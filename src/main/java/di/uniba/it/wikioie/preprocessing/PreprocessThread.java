@@ -11,23 +11,38 @@ import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.pdf.PDFParserConfig;
 import org.apache.tika.sax.BodyContentHandler;
 import org.xml.sax.SAXException;
 
+/**
+ * PreprocessThread class shapes a single thread.
+ */
 public class PreprocessThread extends Thread {
-	
+
+	/**
+	 * BlockingQueue for containing wrapped files.
+	 */
 	private final BlockingQueue<PreFile> in;
 	private boolean run = true;	
 	private final String outputPath;
 	private int threadDocCount = 0;
+	private AutoDetectParser autoParser;
+	private Metadata metadata;
+	private ParseContext context;
 	private static final Logger LOG = Logger.getLogger(PreprocessThread.class.getName());
 	
-	public PreprocessThread(BlockingQueue<PreFile> in, String outputPath) {
+	public PreprocessThread(BlockingQueue<PreFile> in, String outputPath, AutoDetectParser autoParser, Metadata metadata, ParseContext context) {
 		this.in = in;
 		this.outputPath = outputPath;
+		this.autoParser = autoParser;
+		this.metadata = metadata;
+		this.context = context;
 	}
-	
+
+	/**
+	 * Takes a PreFile object from the BlockingQueue and checks if it is a poison object. If not, parses the wrapped file,
+	 * otherwise, sets run to false, closing the thread.
+	 */
 	@Override
 	public void run() {
 		while(run) {
@@ -50,37 +65,43 @@ public class PreprocessThread extends Thread {
 				} else {
 					setRun(false);
 				}
-			} catch (InterruptedException | IOException | SAXException | TikaException e) {
+			} catch (InterruptedException | IOException | SAXException e) {
 				LOG.log(Level.SEVERE, "An error occurred: ", e);
 			}
 		}
 	}
-	
-	public String parse(File file) throws IOException, SAXException, TikaException {
+
+	/**
+	 * Parses and extracts text from the file wrapped in PreFile object.
+	 * @param file
+	 * @return text to be written.
+	 * @throws IOException
+	 * @throws SAXException
+	 * @throws TikaException
+	 */
+	public String parse(File file) throws IOException, SAXException {
 		String filePath = file.getAbsolutePath();
 		FileInputStream stream = new FileInputStream(file);
-		AutoDetectParser autoParser = new AutoDetectParser();
-		Metadata metadata = new Metadata();
-		BodyContentHandler handler = new BodyContentHandler(Integer.MAX_VALUE);		
-		PDFParserConfig pdfConfig = new PDFParserConfig();
-		//pdfConfig.setOcrStrategy(PDFParserConfig.OCR_STRATEGY.OCR_AND_TEXT_EXTRACTION);
-		pdfConfig.setExtractInlineImages(true);		
-		//TesseractOCRConfig ocrConfig = new TesseractOCRConfig();
-		ParseContext context = new ParseContext();				
-		//context.set(TesseractOCRConfig.class, ocrConfig);
-		context.set(PDFParserConfig.class, pdfConfig);	
-		context.set(AutoDetectParser.class, autoParser);
+		BodyContentHandler handler = new BodyContentHandler(Integer.MAX_VALUE);
 		LOG.log(Level.INFO, "[NAME: " + Thread.currentThread().getName() + "]" + " Processing " + filePath);
 		try {
 			autoParser.parse(stream, handler, metadata, context);
-		} catch (TikaException | OutOfMemoryError e) {
-			LOG.log(Level.WARNING, "[FILE: " + filePath + "] " + "caused error: " + e.getMessage());
+		} catch (OutOfMemoryError | TikaException e) {
+			LOG.log(Level.WARNING, "[FILE: " + filePath + "] " + "caused error: " + e.getStackTrace().toString());
 		}
 		String text = handler.toString();
 		stream.close();
 		return text;
 	}
-	
+
+	/**
+	 * Writes the extracted text in a new file
+	 * @param id of the file
+	 * @param title of the file
+	 * @param text
+	 * @param outputPath where the new file is stored
+	 * @throws IOException
+	 */
 	public void writePlainText(int id, String title, String text, String outputPath) throws IOException {
 		try {
 			FileWriter writer = new FileWriter(new File(outputPath, "plain_"+id)); 
@@ -90,13 +111,11 @@ public class PreprocessThread extends Thread {
 			writer.close();
 			threadDocCount++;
     	} catch (IOException e) {
-    		LOG.log(Level.SEVERE, "An error occurred", e);
+    		LOG.log(Level.SEVERE, "An error occurred ", e);
     	}
 	}
 
-	public void setRun(boolean set) {
-		run = set;
-	}
+	public void setRun(boolean set) { run = set; }
 
 	public int getDocCount() {
 		return threadDocCount;

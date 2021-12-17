@@ -1,15 +1,12 @@
 package di.uniba.it.wikioie.preprocessing;
 
 /**
-* This class preprocesses a PDF.
+* Preprocess class processes files in order to extract text.
 * 
 * @author angelica
 */
 
-
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +21,12 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.tika.exception.TikaException;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.parser.ocr.TesseractOCRConfig;
+import org.apache.tika.parser.ocr.TesseractOCRParser;
+import org.apache.tika.parser.pdf.PDFParserConfig;
 import org.xml.sax.SAXException;
 
 public class Preprocess {	
@@ -35,12 +38,19 @@ public class Preprocess {
 	private static final Logger LOG = Logger.getLogger(Preprocess.class.getName());
 		
 	public Preprocess() { }
-	
-	public void preprocess(File file, String output) throws IOException, TikaException, SAXException {	
+
+	/**
+	 * Creates a PreFile object for each file and adds it to the queue.
+	 * @param file
+	 * @throws IOException
+	 * @throws TikaException
+	 * @throws SAXException
+	 */
+	public void preprocess(File file) throws IOException, TikaException, SAXException {
 		if(file.isDirectory()) { 	
 			File[] listFiles = file.listFiles();
 			for(File f: listFiles) {
-				preprocess(f, output);
+				preprocess(f);
 			}
 		} else {
 			if(file.isFile()) {
@@ -54,8 +64,13 @@ public class Preprocess {
 				}
 			}				
 		}	
-	} 
-	
+	}
+
+	/**
+	 * Creates a poison PreFile for each thread. A poisoned object is added to the queue at last,
+	 * to stop the thread taking it.
+	 * @param nt number of threads
+	 */
 	private void poison(int nt) {
 		PreFile poison = new PreFile();
 		for(int i=0; i<nt; i++)
@@ -68,7 +83,8 @@ public class Preprocess {
 		Options options = new Options();
 		options = options.addOption(new Option("i", true, "Input directory"))
 				.addOption(new Option("o", true, "Output directory"))
-				.addOption(new Option("t", true, "Number of threads (optional, default 4)"));
+				.addOption(new Option("t", true, "Number of threads (optional, default 4)"))
+				.addOption(new Option("r", false, "Tesseract OCR (optional, default disabled)" ));
 		try {
 			DefaultParser cmdParser = new DefaultParser();
 			CommandLine cmd = cmdParser.parse(options, args);
@@ -78,17 +94,44 @@ public class Preprocess {
 				int nt = Integer.parseInt(cmd.getOptionValue("t", "4"));
 				LOG.log(Level.INFO, "Input dir: {0}", cmd.getOptionValue("i"));
 				LOG.log(Level.INFO, "Output dir: {0}", cmd.getOptionValue("o"));
-				LOG.log(Level.INFO, "Threads: {0}", nt);				
+				LOG.log(Level.INFO, "Threads: {0}", nt);
+
+				//Initializing parser
+				AutoDetectParser autoParser = new AutoDetectParser();
+				Metadata metadata = new Metadata();
+				PDFParserConfig pdfConfig = new PDFParserConfig();
+				pdfConfig.setExtractInlineImages(true);
+				TesseractOCRConfig ocrConfig = new TesseractOCRConfig();
+				if(cmd.hasOption("r")) {
+					TesseractOCRParser ocrParser = new TesseractOCRParser();
+					if(ocrParser.hasTesseract()) {
+						ocrConfig.setLanguage("ita");
+						LOG.log(Level.INFO, "OCR enabled");
+						//System.out.println("Using "+ ocrConfig.getLanguage().toString() + " model");
+					} else {
+						ocrConfig.setSkipOcr(true);
+						LOG.log(Level.WARNING, "Tesseract is not installed, can't enable OCR");
+					}
+				} else {
+					ocrConfig = new TesseractOCRConfig();
+					ocrConfig.setSkipOcr(true);
+					LOG.log(Level.INFO, "OCR disabled");
+				}
+				ParseContext context = new ParseContext();
+				context.set(PDFParserConfig.class, pdfConfig);
+				context.set(AutoDetectParser.class, autoParser);
+				context.set(TesseractOCRConfig.class, ocrConfig);
+
 				List<PreprocessThread> list = new ArrayList<>();
 				for(int i=0; i<nt; i++) {
-					list.add(new PreprocessThread(in, outputPath));
+					list.add(new PreprocessThread(in, outputPath, autoParser, metadata, context));
 				}
 				for(Thread t: list) {
 					t.start();
 				}
-				LOG.info("Starting preprocessing...");
 				Preprocess pre = new Preprocess();
-				pre.preprocess(inputPath, outputPath);
+				LOG.info("Starting preprocessing...");
+				pre.preprocess(inputPath);
 				pre.poison(nt);
 				for(Thread t: list) {
 					t.join();
