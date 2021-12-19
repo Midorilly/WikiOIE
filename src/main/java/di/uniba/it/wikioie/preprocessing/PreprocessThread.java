@@ -19,9 +19,6 @@ import org.xml.sax.SAXException;
  */
 public class PreprocessThread extends Thread {
 
-	/**
-	 * BlockingQueue for containing wrapped files.
-	 */
 	private final BlockingQueue<PreFile> in;
 	private boolean run = true;	
 	private final String outputPath;
@@ -79,7 +76,7 @@ public class PreprocessThread extends Thread {
 	 * @throws SAXException
 	 * @throws TikaException
 	 */
-	public String parse(File file) throws IOException, SAXException {
+	private String parse(File file) throws IOException, SAXException {
 		String filePath = file.getAbsolutePath();
 		FileInputStream stream = new FileInputStream(file);
 		BodyContentHandler handler = new BodyContentHandler(Integer.MAX_VALUE);
@@ -102,7 +99,7 @@ public class PreprocessThread extends Thread {
 	 * @param outputPath where the new file is stored
 	 * @throws IOException
 	 */
-	public void writePlainText(int id, String title, String text, String outputPath) throws IOException {
+	private void writePlainText(int id, String title, String text, String outputPath) throws IOException {
 		try {
 			FileWriter writer = new FileWriter(new File(outputPath, "plain_"+id)); 
 			writer.write("<doc id=\"" + id + "\" url=\"?curid="+ id + "\" title=\"" + title + "\" >");
@@ -115,9 +112,9 @@ public class PreprocessThread extends Thread {
     	}
 	}
 
-	public void setRun(boolean set) { run = set; }
+	private void setRun(boolean set) { run = set; }
 
-	public int getDocCount() {
+	int getDocCount() {
 		return threadDocCount;
 	}	
 }

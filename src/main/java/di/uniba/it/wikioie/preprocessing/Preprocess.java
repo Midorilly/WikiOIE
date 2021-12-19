@@ -20,6 +20,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.lucene.util.packed.DirectMonotonicReader;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
@@ -27,6 +28,7 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.ocr.TesseractOCRConfig;
 import org.apache.tika.parser.ocr.TesseractOCRParser;
 import org.apache.tika.parser.pdf.PDFParserConfig;
+import org.glassfish.jersey.model.Parameter;
 import org.xml.sax.SAXException;
 
 public class Preprocess {	
@@ -46,7 +48,7 @@ public class Preprocess {
 	 * @throws TikaException
 	 * @throws SAXException
 	 */
-	public void preprocess(File file) throws IOException, TikaException, SAXException {
+	private void preprocess(File file) throws IOException, TikaException, SAXException {
 		if(file.isDirectory()) { 	
 			File[] listFiles = file.listFiles();
 			for(File f: listFiles) {
@@ -67,14 +69,61 @@ public class Preprocess {
 	}
 
 	/**
+	 * Creates nt PreprocessThread object(s) and adds it to a list
+	 * @param nt number of threads
+	 * @param outputPath
+	 * @param autoParser
+	 * @param metadata
+	 * @param context
+	 * @return list of PreprocessThread object(s)
+	 */
+	private static List<PreprocessThread> initializeThread(int nt, String outputPath, AutoDetectParser autoParser, Metadata metadata, ParseContext context) {
+		List<PreprocessThread> list = new ArrayList<>();
+		for(int i=0; i<nt; i++) {
+			list.add(new PreprocessThread(in, outputPath, autoParser, metadata, context));
+		}
+		return list;
+	}
+
+	/**
+	 * Starts thread(s)
+	 * @param list of PreprocessThread
+	 */
+	private void startThread(List<PreprocessThread> list) {
+		for(Thread t: list) {
+			t.start();
+		}
+	}
+
+	/**
+	 * Closes thread(s)
+	 * @param list of PreprocessThread
+	 * @throws InterruptedException
+	 */
+	private void closeThread(List<PreprocessThread> list) throws InterruptedException {
+		poison(list);
+		for(Thread t: list) {
+			t.join();
+		}
+		LOG.info("Closing...");
+	}
+
+	/**
 	 * Creates a poison PreFile for each thread. A poisoned object is added to the queue at last,
 	 * to stop the thread taking it.
-	 * @param nt number of threads
 	 */
-	private void poison(int nt) {
+	private void poison(List<PreprocessThread> list) {
 		PreFile poison = new PreFile();
-		for(int i=0; i<nt; i++)
+		for(Thread t: list)
 			in.add(poison);
+	}
+
+	private void stats(List<PreprocessThread> list) {
+		for(PreprocessThread t: list) {
+			outputDocCount = outputDocCount + t.getDocCount();
+		}
+		LOG.log(Level.INFO, "Input file count: " + inputDocCount);
+		LOG.log(Level.INFO, "Processed file count: " + outputDocCount);
 	}
 	
 	public static void main(String[] args) throws IOException, TikaException, SAXException {
@@ -107,7 +156,6 @@ public class Preprocess {
 					if(ocrParser.hasTesseract()) {
 						ocrConfig.setLanguage("ita");
 						LOG.log(Level.INFO, "OCR enabled");
-						//System.out.println("Using "+ ocrConfig.getLanguage().toString() + " model");
 					} else {
 						ocrConfig.setSkipOcr(true);
 						LOG.log(Level.WARNING, "Tesseract is not installed, can't enable OCR");
@@ -122,26 +170,13 @@ public class Preprocess {
 				context.set(AutoDetectParser.class, autoParser);
 				context.set(TesseractOCRConfig.class, ocrConfig);
 
-				List<PreprocessThread> list = new ArrayList<>();
-				for(int i=0; i<nt; i++) {
-					list.add(new PreprocessThread(in, outputPath, autoParser, metadata, context));
-				}
-				for(Thread t: list) {
-					t.start();
-				}
+				List<PreprocessThread> list = initializeThread(nt, outputPath, autoParser, metadata, context);
 				Preprocess pre = new Preprocess();
+				pre.startThread(list);
 				LOG.info("Starting preprocessing...");
 				pre.preprocess(inputPath);
-				pre.poison(nt);
-				for(Thread t: list) {
-					t.join();
-				}
-				LOG.info("Closing...");
-				for(PreprocessThread t: list) {
-					outputDocCount = outputDocCount + t.getDocCount();
-				}
-				LOG.log(Level.INFO, "Input file count: " + inputDocCount);
-				LOG.log(Level.INFO, "Processed file count: " + outputDocCount);			
+				pre.closeThread(list);
+				pre.stats(list);
 			}			
 		} catch (ParseException e) {
 			 HelpFormatter formatter = new HelpFormatter();

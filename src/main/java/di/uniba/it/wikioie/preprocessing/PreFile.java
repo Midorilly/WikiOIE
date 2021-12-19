@@ -32,15 +32,15 @@ public class PreFile {
 		poison = true;
 	}
 	
-	public boolean isPoison() {
+	boolean isPoison() {
 		return poison;
 	}
 	
-	public File getFile() {
+	File getFile() {
 		return file;
 	}
 	
-	public int getId() {
+	int getId() {
 		return id;
 	}
 
