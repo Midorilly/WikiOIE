@@ -34,6 +34,7 @@ import org.xml.sax.SAXException;
 public class Preprocess {	
 	
 	private static BlockingQueue<PreFile> in = new ArrayBlockingQueue(10000);
+	private static List<PreprocessThread> list;
 	private int id = 0;
 	private static int inputDocCount = 0;
 	private static int outputDocCount;
@@ -87,9 +88,8 @@ public class Preprocess {
 
 	/**
 	 * Starts thread(s)
-	 * @param list of PreprocessThread
 	 */
-	private void startThread(List<PreprocessThread> list) {
+	private void startThread() {
 		for(Thread t: list) {
 			t.start();
 		}
@@ -97,11 +97,10 @@ public class Preprocess {
 
 	/**
 	 * Closes thread(s)
-	 * @param list of PreprocessThread
 	 * @throws InterruptedException
 	 */
-	private void closeThread(List<PreprocessThread> list) throws InterruptedException {
-		poison(list);
+	private void closeThread() throws InterruptedException {
+		poison();
 		for(Thread t: list) {
 			t.join();
 		}
@@ -112,13 +111,13 @@ public class Preprocess {
 	 * Creates a poison PreFile for each thread. A poisoned object is added to the queue at last,
 	 * to stop the thread taking it.
 	 */
-	private void poison(List<PreprocessThread> list) {
+	private void poison() {
 		PreFile poison = new PreFile();
 		for(Thread t: list)
 			in.add(poison);
 	}
 
-	private void stats(List<PreprocessThread> list) {
+	private void stats() {
 		for(PreprocessThread t: list) {
 			outputDocCount = outputDocCount + t.getDocCount();
 		}
@@ -170,13 +169,13 @@ public class Preprocess {
 				context.set(AutoDetectParser.class, autoParser);
 				context.set(TesseractOCRConfig.class, ocrConfig);
 
-				List<PreprocessThread> list = initializeThread(nt, outputPath, autoParser, metadata, context);
+				list = initializeThread(nt, outputPath, autoParser, metadata, context);
 				Preprocess pre = new Preprocess();
-				pre.startThread(list);
+				pre.startThread();
 				LOG.info("Starting preprocessing...");
 				pre.preprocess(inputPath);
-				pre.closeThread(list);
-				pre.stats(list);
+				pre.closeThread();
+				pre.stats();
 			}			
 		} catch (ParseException e) {
 			 HelpFormatter formatter = new HelpFormatter();
