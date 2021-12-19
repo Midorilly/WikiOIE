@@ -105,9 +105,9 @@ WikiOIE is a framework for extracting facts (triples) from the Wikipedia dump. W
 ## Usage
 -----------
 1. Download your dump.
-2. **Preprocess the dump**: run the *clean_up.sh* script by opening a CLI at your dump path and typing
+2. **Preprocess the dump**: run the *clean_up.sh* script by opening a CLI in the script folder; remember to specify the dump path
     ```
-    ./clean_up.sh
+    ./clean_up.sh your_dump_path
     ```
     This script extracts possible .7z, .zip and .rar folders and converts .p7m files found in your dump. 
     **This script only works on Linux! Working on the Windows version.**
