@@ -51,8 +51,8 @@ public class SplitDataset {
         reader.close();
         triplesCount = relevant.size() + notRelevant.size();
         LOG.log(Level.INFO, "Starting with " + triplesCount + " triples");
-        LOG.log(Level.INFO, "Starting with " + relevant.size() + " relevant triples");
-        LOG.log(Level.INFO, "Starting with " + notRelevant.size() + " non-relevant triples");
+        LOG.log(Level.INFO, relevant.size() + " relevant triples");
+        LOG.log(Level.INFO, notRelevant.size() + " non-relevant triples");
         removeDuplicates(triples);
     }
 
@@ -87,7 +87,7 @@ public class SplitDataset {
         double trSize = triplesCount * sampling; //size of entire training set
         int rSize = (int) (trSize * relevantPercentage); //number of relevant triples in training set
         int nrSize = (int) trSize - rSize; //number of non-relevant triples in training set
-        LOG.log(Level.INFO, "TRAINING SET has " + rSize + " relevant triples and " + nrSize + " non-relevant triples");
+        LOG.log(Level.INFO, "[TRAINING SET]: " + rSize + " relevant triples, " + nrSize + " non-relevant triples");
 
         File training = new File(outputPath + "/training");
         if(training.mkdirs()) {
@@ -98,25 +98,25 @@ public class SplitDataset {
 
             Iterator<String> rIter = relevant.iterator();
             for(int i=0; i<rSize; i++) {
-                if(!relevant.isEmpty()) {
+                if(rIter.hasNext()) {
                     String line = rIter.next().toString();
                     buff.write(line);
                     buff.newLine();
                     rIter.remove();
                 } else {
-                    LOG.log(Level.WARNING, "Empty relevant set");
+                    LOG.log(Level.WARNING, "[TRAINING] Relevant set is empty");
                 }
             }
 
             Iterator<String> nrIter = notRelevant.iterator();
             for(int i=0; i<nrSize; i++) {
-                if(!notRelevant.isEmpty()) {
+                if(nrIter.hasNext()) {
                     String line = nrIter.next().toString();
                     buff.write(line);
                     buff.newLine();
                     nrIter.remove();
                 } else {
-                    LOG.log(Level.WARNING, "Empty not relevant set");
+                    LOG.log(Level.WARNING, "[TRAINING] Non-relevant set is empty");
                 }
             }
             csv.close();
@@ -136,7 +136,7 @@ public class SplitDataset {
         double teSize = triplesCount * sampling; //size of entire test set
         int rSize = (int) (teSize * relevantPercentage); //number of relevant triples in test set
         int nrSize = (int) teSize - rSize; //number of non-relevant triples in test set
-        LOG.log(Level.INFO, "TEST SET has " + rSize + " relevant triples and " + nrSize + " non-relevant triples");
+        LOG.log(Level.INFO, "[TEST SET]: " + rSize + " relevant triples, " + nrSize + " non-relevant triples");
 
         File test = new File(outputPath + "/test");
         if(test.mkdirs()) {
@@ -153,7 +153,7 @@ public class SplitDataset {
                     buff.newLine();
                     rIter.remove();
                 } else {
-                    LOG.log(Level.WARNING, "Empty relevant set");
+                    LOG.log(Level.WARNING, "[TEST] Relevant set is empty");
                 }
             }
 
@@ -165,7 +165,7 @@ public class SplitDataset {
                     buff.newLine();
                     nrIter.remove();
                 } else {
-                    LOG.log(Level.WARNING, "Empty not relevant set");
+                    LOG.log(Level.WARNING, "[TEST] Non-relevant set is empty");
                 }
             }
             csv.close();
@@ -208,7 +208,7 @@ public class SplitDataset {
                 splitter.createTestSet(testSampling);
             }
         } catch (ParseException | IOException e) {
-            e.printStackTrace();
+            LOG.log(Level.WARNING, e.getMessage());
         }
     }
 
