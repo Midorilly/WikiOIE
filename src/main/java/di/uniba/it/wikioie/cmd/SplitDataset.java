@@ -12,6 +12,8 @@ import java.util.logging.Logger;
 /**
  * SplitDataset class split a starting dataset in training and test set, respecting given sampling and relevant
  * triples percentage.
+ *
+ * @author angel
  */
 public class SplitDataset {
 
@@ -23,8 +25,8 @@ public class SplitDataset {
     private static final Logger LOG = Logger.getLogger(CreateDataset.class.getName());
 
     public SplitDataset(double percentage, String path) {
-        relevant = new HashSet<String>(10000);
-        notRelevant = new HashSet<String>(10000);
+        relevant = new HashSet<String>();
+        notRelevant = new HashSet<String>();
         relevantPercentage = percentage;
         outputPath = path;
     }
@@ -193,7 +195,7 @@ public class SplitDataset {
             if (cmd.hasOption("i") && cmd.hasOption("o")) {
                 LOG.log(Level.INFO, "Input file: {0}", cmd.getOptionValue("i"));
                 LOG.log(Level.INFO, "Output dir: {0}", cmd.getOptionValue("o"));
-                File input = new File(cmd.getOptionValue("i"));
+                File inputFile = new File(cmd.getOptionValue("i"));
                 String outputPath = cmd.getOptionValue("o");
                 double trainingSampling = Double.parseDouble(cmd.getOptionValue("a"));
                 double testSampling = Double.parseDouble(cmd.getOptionValue("e"));
@@ -201,11 +203,12 @@ public class SplitDataset {
 
                 SplitDataset splitter = new SplitDataset(relevantPercentage, outputPath);
                 LOG.log(Level.INFO, "Splitting dataset...");
-                splitter.splitTriples(input);
+                splitter.splitTriples(inputFile);
                 LOG.log(Level.INFO, "Creating training set...");
                 splitter.createTrainingSet(trainingSampling);
                 LOG.log(Level.INFO, "Creating test set...");
                 splitter.createTestSet(testSampling);
+                LOG.log(Level.INFO, "Closing...");
             }
         } catch (ParseException | IOException e) {
             LOG.log(Level.WARNING, e.getMessage());
