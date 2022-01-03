@@ -23,6 +23,8 @@ public class SplitDataset {
     private String outputPath = "";
     private int triplesCount = 0;
     private static final Logger LOG = Logger.getLogger(CreateDataset.class.getName());
+    private static final String trLog = "[TRAINING SET]";
+    private static final String teLog = "[TEST SET]";
 
     public SplitDataset(double percentage, String path) {
         relevant = new HashSet<String>();
@@ -81,19 +83,19 @@ public class SplitDataset {
         writer.close();
     }
     /**
-     * Creates a training set with given sampling percentage. Every taken triple is removed from its set.
+     * Creates a set with given sampling percentage. Every taken triple is removed from its set.
      * @param sampling
      * @throws IOException
      */
-    private void createTrainingSet(double sampling) throws IOException {
-        double trSize = triplesCount * sampling; //size of entire training set
-        int rSize = (int) (trSize * relevantPercentage); //number of relevant triples in training set
-        int nrSize = (int) trSize - rSize; //number of non-relevant triples in training set
-        LOG.log(Level.INFO, "[TRAINING SET]: " + rSize + " relevant triples, " + nrSize + " non-relevant triples");
+    private void createSet(double sampling, String log, String dirName, String fileName) throws IOException {
+        double trSize = triplesCount * sampling; //size of entire set
+        int rSize = (int) (trSize * relevantPercentage); //number of relevant triples in set
+        int nrSize = (int) trSize - rSize; //number of non-relevant triples in set
+        LOG.log(Level.INFO, log + " " + rSize + " relevant triples, " + nrSize + " non-relevant triples");
 
-        File training = new File(outputPath + "/training");
-        if(training.mkdirs()) {
-            File r = new File(training.getAbsolutePath() + "/training_set.tsv");
+        File dir = new File(outputPath + dirName);
+        if(dir.mkdirs()) {
+            File r = new File(dir.getAbsolutePath() + fileName);
             FileWriter writer = new FileWriter(r);
             BufferedWriter buff = new BufferedWriter(writer);
             CSVPrinter csv = CSVFormat.TDF.withHeader("title", "text", "subject", "predicate", "object", "ann.").print(buff);
@@ -106,7 +108,7 @@ public class SplitDataset {
                     buff.newLine();
                     rIter.remove();
                 } else {
-                    LOG.log(Level.WARNING, "[TRAINING] Relevant set is empty");
+                    LOG.log(Level.WARNING, log + " Relevant set is empty");
                 }
             }
 
@@ -118,7 +120,7 @@ public class SplitDataset {
                     buff.newLine();
                     nrIter.remove();
                 } else {
-                    LOG.log(Level.WARNING, "[TRAINING] Non-relevant set is empty");
+                    LOG.log(Level.WARNING, log + " Non-relevant set is empty");
                 }
             }
             csv.close();
@@ -127,56 +129,6 @@ public class SplitDataset {
             LOG.log(Level.INFO, relevant.size() + " relevant triples remaining");
             LOG.log(Level.INFO, notRelevant.size() + " non-relevant triples remaining");
         }
-    }
-
-    /**
-     * Creates a test set with given sampling percentage. Every taken triple is removed from its set.
-     * @param sampling
-     * @throws IOException
-     */
-    private void createTestSet(double sampling) throws IOException {
-        double teSize = triplesCount * sampling; //size of entire test set
-        int rSize = (int) (teSize * relevantPercentage); //number of relevant triples in test set
-        int nrSize = (int) teSize - rSize; //number of non-relevant triples in test set
-        LOG.log(Level.INFO, "[TEST SET]: " + rSize + " relevant triples, " + nrSize + " non-relevant triples");
-
-        File test = new File(outputPath + "/test");
-        if(test.mkdirs()) {
-            File r = new File(test.getAbsolutePath() + "/test_set.tsv");
-            FileWriter writer = new FileWriter(r);
-            BufferedWriter buff = new BufferedWriter(writer);
-            CSVPrinter csv = CSVFormat.TDF.withHeader("title", "text", "subject", "predicate", "object", "ann.").print(buff);
-
-            Iterator<String> rIter = relevant.iterator();
-            for(int i=0; i<rSize; i++) {
-                if(rIter.hasNext()) {
-                    String line = rIter.next().toString();
-                    buff.write(line);
-                    buff.newLine();
-                    rIter.remove();
-                } else {
-                    LOG.log(Level.WARNING, "[TEST] Relevant set is empty");
-                }
-            }
-
-            Iterator<String> nrIter = notRelevant.iterator();
-            for(int i=0; i<nrSize; i++) {
-                if (nrIter.hasNext()) {
-                    String line = nrIter.next().toString();
-                    buff.write(line);
-                    buff.newLine();
-                    nrIter.remove();
-                } else {
-                    LOG.log(Level.WARNING, "[TEST] Non-relevant set is empty");
-                }
-            }
-            csv.close();
-            buff.close();
-            writer.close();
-            LOG.log(Level.INFO, relevant.size() + " relevant triples remaining");
-            LOG.log(Level.INFO, notRelevant.size() + " non-relevant triples remaining");
-        }
-
     }
 
     /**
@@ -205,9 +157,13 @@ public class SplitDataset {
                 LOG.log(Level.INFO, "Splitting dataset...");
                 splitter.splitTriples(inputFile);
                 LOG.log(Level.INFO, "Creating training set...");
-                splitter.createTrainingSet(trainingSampling);
+                String dirName = "/training";
+                String fileName = "/training_set.tsv";
+                splitter.createSet(trainingSampling, trLog, dirName, fileName);
                 LOG.log(Level.INFO, "Creating test set...");
-                splitter.createTestSet(testSampling);
+                dirName = "/test";
+                fileName = "/test_set.tsv";
+                splitter.createSet(testSampling, teLog, dirName, fileName);
                 LOG.log(Level.INFO, "Closing...");
             }
         } catch (ParseException | IOException e) {
