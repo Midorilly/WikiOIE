@@ -82,15 +82,16 @@ public class SplitDataset {
         buff.close();
         writer.close();
     }
+
     /**
      * Creates a set with given sampling percentage. Every taken triple is removed from its set.
      * @param sampling
      * @throws IOException
      */
     private void createSet(double sampling, String log, String dirName, String fileName) throws IOException {
-        double trSize = triplesCount * sampling; //size of entire set
-        int rSize = (int) (trSize * relevantPercentage); //number of relevant triples in set
-        int nrSize = (int) trSize - rSize; //number of non-relevant triples in set
+        double size = triplesCount * sampling; //size of entire set
+        int rSize = (int) (size * relevantPercentage); //number of relevant triples in set
+        int nrSize = (int) size - rSize; //number of non-relevant triples in set
         LOG.log(Level.INFO, log + " " + rSize + " relevant triples, " + nrSize + " non-relevant triples");
 
         File dir = new File(outputPath + dirName);
