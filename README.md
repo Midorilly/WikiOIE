@@ -101,11 +101,13 @@ WikiOIE is a framework for extracting facts (triples) from the Wikipedia dump. W
 5. [Download](https://www.oracle.com/java/technologies/downloads/) the appropriate **Java JDK** version for your OS
 6. [Install](https://github.com/UB-Mannheim/tesseract/wiki) **Tesseract OCR** and add its path to your system variables. Read more about Tesseract [here](https://cwiki.apache.org/confluence/display/tika/tikaocr)
 7. [Download](https://github.com/tesseract-ocr/tessdata) the Tesseract file for Italian language *ita.traineddata* and store it in *Tesseract-OCR/tessdata* folder 
+8. [Install](https://www.7-zip.org/download.html) **7-Zip** for Windows and add its path to your system variables
+9. [Install](https://wiki.openssl.org/index.php/Binaries) **OpenSSL** for Windows or, if Git is installed, you can already find ```openssl.exe``` at ```C:\Program Files\Git\usr\bin```. Add its path to your system variables
 
 ## Usage
 -----------
 1. Download your dump.
-2. **Preprocess the dump**: run the *clean_up.sh* script by opening a CLI in the script folder; remember to specify the dump path
+2. **Preprocess the dump**: run the *clean_up* script by opening a CLI in the script folder; remember to specify the dump path
     ```
     ./clean_up.sh your_dump_path
     ```
