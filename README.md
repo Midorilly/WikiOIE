@@ -67,7 +67,7 @@ WikiOIE is a framework for extracting facts (triples) from the Wikipedia dump. W
     sudo apt install p7zip-full
     ```
    
-### On Windows distributions (incomplete!)
+### On Windows distributions
 1. [Clone](https://github.com/ufal/udpipe) **UDpipe** repository
     ```
     git clone https://github.com/ufal/udpipe
@@ -112,7 +112,6 @@ WikiOIE is a framework for extracting facts (triples) from the Wikipedia dump. W
     ./clean_up.sh your_dump_path
     ```
     This script extracts possible .7z, .zip and .rar folders and converts .p7m files found in your dump. 
-    **This script only works on Linux! Working on the Windows version.**
   
 3. **Extract raw text**: run the main class *di.uniba.it.wikioie.preprocessing.Preprocess* using the following run configurations
     ```
