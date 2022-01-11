@@ -99,7 +99,7 @@ public class SplitDataset {
             File r = new File(dir.getAbsolutePath() + fileName);
             FileWriter writer = new FileWriter(r);
             BufferedWriter buff = new BufferedWriter(writer);
-            CSVPrinter csv = CSVFormat.TDF.withHeader("title", "text", "subject", "predicate", "object", "ann.").print(buff);
+            CSVPrinter csv = CSVFormat.TDF.withHeader("title", "text", "subject", "predicate", "object", "label").print(buff);
 
             Iterator<String> rIter = relevant.iterator();
             for(int i=0; i<rSize; i++) {
