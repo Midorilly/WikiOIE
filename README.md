@@ -4,9 +4,7 @@ WikiOIE is a framework for extracting facts (triples) from the Wikipedia dump. W
 **This is an alternative framework for extracting facts from Italian Public Administration announcements. The main difference is the *di.uniba.it.wikioie.preprocessing* package.**
 
 
-<<<<<<< HEAD
 ## Workflow
-=======
 ```
 @inproceedings{cassottiIIR2021,
   title = {{Extracting Relations from Italian Wikipedia using Unsupervised Information Extraction}},
@@ -32,7 +30,6 @@ While, the self-training stategy is described in the following paper:
 ```
 
 Workflow
->>>>>>> ef14f33ca7199c5d281337adad497e72db598f8c
 -----------
 ### On Debian distributions
 
