@@ -1,10 +1,8 @@
 # WikiOIE
 WikiOIE is a framework for extracting facts (triples) from the Wikipedia dump. WikiOIE relies on UDpipe universal dependency parser, simple rules, and heuristics for automatically extracting facts from the Wikipedia dump. Moreover, WikiOIE can use a supervised approach for classifing relevant and not-relevant triples. In case you have a small number of annotated triples, you can exploit a self-training strategy.
 
-**This is an alternative framework for extracting facts from Italian Public Administration announcements. The main difference is the *di.uniba.it.wikioie.preprocessing* package.**
+WikiOIE is described in the following paper. Please, cite it if you use our framework.
 
-
-## Workflow
 ```
 @inproceedings{cassottiIIR2021,
   title = {{Extracting Relations from Italian Wikipedia using Unsupervised Information Extraction}},
@@ -29,7 +27,9 @@ While, the self-training stategy is described in the following paper:
 }
 ```
 
-Workflow
+**This is an alternative framework for extracting facts from Italian Public Administration announcements. The main difference is the *di.uniba.it.wikioie.preprocessing* package.**
+
+## Workflow
 -----------
 ### On Debian distributions
 
