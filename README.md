@@ -41,7 +41,7 @@ While, the self-training stategy is described in the following paper:
     ```
     make server
     ```
-    You need to install ```make``` and ```g++``` if not installed by defalut. Read [here](https://ufal.mff.cuni.cz/udpipe/1/install) for more information on how to compile the server
+    You need to install ```make``` and ```g++``` if not installed by default. Read [here](https://ufal.mff.cuni.cz/udpipe/1/install) for more information on how to compile the server
 3. [Download](https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-3131#) the Italian language model **italian-isdt-ud-2.5-191206**
 4. Run the server by opening a command-line interface at *udpipe/src/rest_server* path and by typing
     ```
@@ -101,7 +101,7 @@ While, the self-training stategy is described in the following paper:
     ```
     make server
     ```
-     You need to install ```make``` and ```g++``` if not installed by defalut. Read [here](https://ufal.mff.cuni.cz/udpipe/1/install) for more information on how to compile the server
+     You need to install ```make``` and ```g++``` if not installed by default. Read [here](https://ufal.mff.cuni.cz/udpipe/1/install) for more information on how to compile the server
 3.  Run the server by opening a command-line interface at *udpipe/src/rest_server* path and by typing
     ```
     ./udpipe_server port model_name model_name model_path model_desc
